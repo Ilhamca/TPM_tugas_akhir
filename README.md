@@ -1,16 +1,30 @@
 # tugas_akhir
 
-A new Flutter project.
+## Projek dikerjakan dengan bahasa pemrograman yang mendukung teknologi dan komunikasi secara mobile
 
-## Getting Started
+Projek dibuat menggunakan kriteria:
+- [ ] Memiliki konsep projek akhir
+- [ ] Terdapat login dengan enkripsi (tidak menggunakan firebase) dan session
+- [ ] Memiliki login biometric
+- [ ] Terkoneksi database / penyimpanan (SQLite, Hive, dll)
+- [ ] Terdapat web service / API boleh sampai pemanfaatan IoT, games atau multiplatform (Android, iOS) serta memiliki fasilitas LBS yang terkait tema
+- [ ] Terdapat menu buttom navigation: menu profil (ada gambar) dan menu saran dan kesan mata kuliah TPM dan menu logout
+- [ ] Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep
+- [ ] Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope, dll) sesuai konsep
+- [ ] Memiliki fitur/fasilitas AI/ML dan LLM sesuai dengan konsep tema
+- [ ] Memiliki fitur mini games sederhana terkait dengan konsep
+- [ ] Memiliki fasilitas pencarian dan pemilihan serta notifikasi sesuai dengan konsep
 
-This project is a starting point for a Flutter application.
+### Projek dipresentasikan di seluruh jadwal perkuliahan setelah UTS
 
-A few resources to get you started if this is your first Flutter project:
+### Projek dibuat laporan pembuatan projek sekaligus penjelasan source code
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Laporan terdiri dari :
+- Halaman Cover, 
+- Halaman Pengesahan, 
+- Halaman Perancangan (RBPL/RPL), 
+- halaman Implementasi dan penjelasan source code dan Halaman lembar evaluasi pengujian perangkat lunak
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Laporan di upload dan dicetak disertai halaman pengesahan yang salah satu syarat mengikuti UAS
+
+Pada saat presentasi sudah membawa laporan yang nanti akan di tanda tangan dosen pengampu

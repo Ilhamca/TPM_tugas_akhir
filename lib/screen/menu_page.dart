@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tugas_akhir/screen/login_page.dart';
+import 'package:tugas_akhir/constants/string_constants.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key, required this.username});
@@ -12,6 +14,28 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Menu Page'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome, ${widget.username}!',
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

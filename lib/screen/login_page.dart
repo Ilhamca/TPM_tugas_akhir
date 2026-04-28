@@ -4,6 +4,9 @@ import 'package:tugas_akhir/theme/app_color.dart';
 import 'package:tugas_akhir/screen/menu_page.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
 import 'package:tugas_akhir/screen/register_page.dart';
+import 'package:hive/hive.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,42 +34,66 @@ class _LoginPageState extends State<LoginPage> {
     String username = _usernameController.text;
     String password = _passwordController.text;
 
-    final matchedUser = daftarUser
-        .where((u) => u.username == username && u.password == password)
-        .firstOrNull;
+    try {
+      var box = Hive.box('gudangPintarSecureBox');
+      // Mengambil data dari database berdasarkan username
+      var matchedUserData = box.get(username);
 
-    if (matchedUser != null) {
-      setState(() {
-        isLoggedIn = true;
-        isLoginFailed = false;
-      });
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MenuPage(username: username)),
-      );
-    } else {
+      bool isMatch = false;
+      if (matchedUserData != null) {
+        var bytes = utf8.encode(password);
+        var hashedPassword = sha256.convert(bytes).toString();
+        
+        if (matchedUserData['password'] == hashedPassword) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        setState(() {
+          isLoggedIn = true;
+          isLoginFailed = false;
+        });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MenuPage(username: username)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Username atau Password salah'),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        setState(() {
+          isLoggedIn = false;
+          isLoginFailed = true;
+        });
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Text('Username atau Password salah'),
-            ],
-          ),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          duration: const Duration(seconds: 2),
         ),
       );
-      setState(() {
-        isLoggedIn = false;
-        isLoginFailed = true;
-      });
     }
   }
 
@@ -84,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Spacer(),
+                  const Spacer(flex: 1),
                   SizedBox(
                     width: 104,
                     height: 104,
@@ -160,7 +187,6 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 20),
                   Expanded(
                     flex: 3,
                     child: ClipPath(

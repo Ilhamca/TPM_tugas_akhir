@@ -3,6 +3,10 @@ import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
 import 'package:tugas_akhir/models/user_model.dart';
 import 'package:tugas_akhir/theme/app_color.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
+import 'package:hive/hive.dart';
+import 'package:tugas_akhir/models/user_model.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -13,7 +17,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -24,7 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _namaController.dispose();
+    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -37,12 +41,18 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    final nama = _namaController.text.trim();
+    final email = _emailController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    final usernameSudahDipakai = daftarUser.any(
-      (u) => u.username.toLowerCase() == username.toLowerCase(),
+    var box = Hive.box('gudangPintarSecureBox');
+
+    var bytes = utf8.encode(password);
+    var hashedPassword = sha256.convert(bytes).toString();
+
+    // Check if username already exists
+    final usernameSudahDipakai = box.values.any(
+      (u) => (u['username'] as String).toLowerCase() == username.toLowerCase(),
     );
 
     if (usernameSudahDipakai) {
@@ -57,60 +67,45 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    daftarUser.add(User(nama: nama, username: username, password: password));
+    // Save user data to Hive
+    try {
+      box.put(username, {
+        'email': email,
+        'username': username,
+        'password': hashedPassword,
+      });
 
-    ScaffoldMessenger.of(context).removeCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Pendaftaran berhasil. Silakan login.'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pendaftaran berhasil. Silakan login.'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
 
-    Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text('Daftar Akun'),
-      ),
       body: SafeArea(
-        top: false,
+        top: true,
         child: Column(
           children: [
-            const SizedBox(height: 12),
-            SizedBox(
-              width: 88,
-              height: 88,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.18),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 1.2,
-                      ),
-                    ),
-                  ),
-                  const Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 42),
             const Text(
               'Buat Akun Baru',
               style: TextStyle(
@@ -163,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(height: 24),
                             TextFormField(
-                              controller: _namaController,
+                              controller: _emailController,
                               textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
                                 labelText: 'Email',
@@ -368,8 +363,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     Navigator.pop(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginPage(),
+                                        builder: (context) => const LoginPage(),
                                       ),
                                     );
                                   },

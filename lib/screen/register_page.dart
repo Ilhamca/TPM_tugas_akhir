@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
-import 'package:tugas_akhir/models/user_model.dart';
 import 'package:tugas_akhir/theme/app_color.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
 import 'package:hive/hive.dart';
-import 'package:tugas_akhir/models/user_model.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 

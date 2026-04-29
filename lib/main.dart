@@ -4,6 +4,7 @@ import 'package:tugas_akhir/screen/login_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tugas_akhir/constants/string_constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tugas_akhir/services/notification_services.dart';
 
 class HiveDatabaseHelper {
   static const secureStorage = FlutterSecureStorage();
@@ -43,6 +44,11 @@ class HiveDatabaseHelper {
     debugPrint('Database Hive Terenkripsi Berhasil Dibuka!');
   }
 
+  //Notification
+  static Future<void> initNotifications() async {
+    await NotificationService().init();
+  }
+
 }
 
 Future<void> main() async {
@@ -56,6 +62,9 @@ Future<void> main() async {
 
   // Login Encryption
   await HiveDatabaseHelper.initHiveAndOpenBox();
+
+  // Initialize notifications
+  await HiveDatabaseHelper.initNotifications();
 
   runApp(const MyApp());
 }

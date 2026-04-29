@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
-import 'package:tugas_akhir/constants/string_constants.dart';
+import 'package:tugas_akhir/services/notification_services.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key, required this.username});
@@ -32,6 +32,17 @@ class _MenuPageState extends State<MenuPage> {
                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
               },
               child: const Text('Logout'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Contoh penggunaan notifikasi instan
+                NotificationService().showInstantNotification(
+                  title: 'Hello, ${widget.username}!',
+                  body: 'This is an instant notification.',
+                );
+              },
+              child: const Text('Show Instant Notification'),
             ),
           ],
         ),

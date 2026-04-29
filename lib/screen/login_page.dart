@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tugas_akhir/models/user_model.dart';
 import 'package:tugas_akhir/theme/app_color.dart';
 import 'package:tugas_akhir/screen/menu_page.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';

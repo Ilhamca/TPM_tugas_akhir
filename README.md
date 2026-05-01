@@ -3,8 +3,8 @@
 ## Projek dikerjakan dengan bahasa pemrograman yang mendukung teknologi dan komunikasi secara mobile
 
 Projek dibuat menggunakan kriteria:
-- [ ] Memiliki konsep projek akhir
-- [ ] Terdapat login dengan enkripsi (tidak menggunakan firebase) dan session
+- [X] Memiliki konsep projek akhir
+- [X] Terdapat login dengan enkripsi (tidak menggunakan firebase) dan session
 - [ ] Memiliki login biometric
 - [ ] Terkoneksi database / penyimpanan (SQLite, Hive, dll)
 - [ ] Terdapat web service / API boleh sampai pemanfaatan IoT, games atau multiplatform (Android, iOS) serta memiliki fasilitas LBS yang terkait tema

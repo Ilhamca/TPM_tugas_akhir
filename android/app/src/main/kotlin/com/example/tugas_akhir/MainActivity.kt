@@ -1,5 +1,8 @@
-package com.example.tugas_akhir
+package com.example.tugas_akhir // Biarkan baris ini sesuai dengan nama package Anda yang asli
 
-import io.flutter.embedding.android.FlutterActivity
+// 1. Ubah import ini
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// 2. Ubah FlutterActivity() menjadi FlutterFragmentActivity()
+class MainActivity: FlutterFragmentActivity() {
+}

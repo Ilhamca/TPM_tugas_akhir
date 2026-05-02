@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
 
-
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key, required this.username});
   final String username;
@@ -22,8 +21,8 @@ class _MenuPageState extends State<MenuPage> {
 
   // Fungsi untuk menangani navigasi bawah
   void _onItemTapped(int index) {
-    if (index == 3) {
-      // Index 3 adalah tombol Logout. 
+    if (index == 4) {
+      // Index 3 adalah tombol Logout.
       // Kita cegat agar tidak mengganti halaman, melainkan memunculkan popup.
       _showLogoutDialog();
     } else {
@@ -57,7 +56,10 @@ class _MenuPageState extends State<MenuPage> {
                   MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
-              child: const Text('Logout', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -70,26 +72,29 @@ class _MenuPageState extends State<MenuPage> {
     return Scaffold(
       // Body akan berubah sesuai dengan index yang aktif
       body: _pages[_selectedIndex],
-      
+
       // Implementasi Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // Gunakan fixed agar semua menu muncul meskipun > 3
+        type: BottomNavigationBarType
+            .fixed, // Gunakan fixed agar semua menu muncul meskipun > 3
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.orange.shade700, // Sesuaikan dengan tema Gudang
+        selectedItemColor:
+            Colors.orange.shade700, // Sesuaikan dengan tema Gudang
         unselectedItemColor: Colors.grey.shade600,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.inventory_2),
             label: 'Beranda',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
           BottomNavigationBarItem(
             icon: Icon(Icons.feedback),
             label: 'Saran TPM',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.currency_exchange),
+            label: 'Konversi',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.logout, color: Colors.redAccent),
@@ -135,7 +140,9 @@ class _MenuPageState extends State<MenuPage> {
             // Syarat mutlak: Menu profil (ada gambar)
             const CircleAvatar(
               radius: 60,
-              backgroundImage: NetworkImage('https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'), // Placeholder gambar
+              backgroundImage: NetworkImage(
+                'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+              ), // Placeholder gambar
             ),
             const SizedBox(height: 20),
             const Text(
@@ -177,8 +184,11 @@ class _MenuPageState extends State<MenuPage> {
             TextField(
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: 'Tuliskan kesan dan saran Anda selama mengikuti mata kuliah ini...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintText:
+                    'Tuliskan kesan dan saran Anda selama mengikuti mata kuliah ini...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -187,7 +197,9 @@ class _MenuPageState extends State<MenuPage> {
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Saran berhasil dikirim! Terima kasih.')),
+                    const SnackBar(
+                      content: Text('Saran berhasil dikirim! Terima kasih.'),
+                    ),
                   );
                 },
                 child: const Text('Kirim Saran'),

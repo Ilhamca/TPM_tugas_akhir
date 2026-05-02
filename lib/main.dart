@@ -63,6 +63,9 @@ Future<void> main() async {
   // Login Encryption
   await HiveDatabaseHelper.initHiveAndOpenBox();
 
+  // Database barang
+  await Hive.openBox('inventoryBox');
+
   // Initialize notifications
   await HiveDatabaseHelper.initNotifications();
 

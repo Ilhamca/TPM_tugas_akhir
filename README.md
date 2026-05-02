@@ -6,7 +6,10 @@ Projek dibuat menggunakan kriteria:
 - [X] Memiliki konsep projek akhir
 - [X] Terdapat login dengan enkripsi (tidak menggunakan firebase) dan session
 - [ ] Memiliki login biometric
-- [ ] Terkoneksi database / penyimpanan (SQLite, Hive, dll)
+    </br> - Implementasi selesai
+    </br> - Membutuhukan testing fitur 
+
+- [X] Terkoneksi database / penyimpanan (SQLite, Hive, dll)
 - [ ] Terdapat web service / API boleh sampai pemanfaatan IoT, games atau multiplatform (Android, iOS) serta memiliki fasilitas LBS yang terkait tema
 - [ ] Terdapat menu buttom navigation: menu profil (ada gambar) dan menu saran dan kesan mata kuliah TPM dan menu logout
 - [ ] Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep

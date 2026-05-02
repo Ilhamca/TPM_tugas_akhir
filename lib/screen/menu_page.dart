@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
-import 'package:tugas_akhir/services/notification_services.dart';
 import 'package:tugas_akhir/controller/controller.dart';
+import 'package:tugas_akhir/screen/inventory_page.dart';
+import 'package:tugas_akhir/screen/conversion_page.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key, required this.username});
@@ -17,8 +18,8 @@ class _MenuPageState extends State<MenuPage> {
 
   // Daftar halaman yang akan ditampilkan berdasarkan index yang dipilih
   late final List<Widget> _pages = [
-    _buildDashboardGudang(),
-    _buildProfilPage(),
+    InventoryPage(username: widget.username),
+    const ConversionPage(),
     _buildSaranTPMPage(),
     _buildPengaturanPage(),
   ];
@@ -91,49 +92,6 @@ class _MenuPageState extends State<MenuPage> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
         ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // WIDGET HALAMAN 1: BERANDA / DASHBOARD
-  // ==========================================
-  Widget _buildDashboardGudang() {
-    return SafeArea(
-      child: Center(
-        // Menggunakan SingleChildScrollView agar tidak overflow jika layar kecil
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.warehouse, size: 80, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                'Dashboard Gudang Pintar\nSelamat datang, ${widget.username}!',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // 1. Tombol Notifikasi yang diintegrasikan dari kode lama Anda
-              ElevatedButton.icon(
-                onPressed: () {
-                  NotificationService().showInstantNotification(
-                    title: 'Hello, ${widget.username}!',
-                    body: 'This is an instant notification.',
-                  );
-                },
-                icon: const Icon(Icons.notifications_active),
-                label: const Text('Show Instant Notification'),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

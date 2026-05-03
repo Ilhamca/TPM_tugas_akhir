@@ -10,23 +10,60 @@ class ConversionPage extends StatefulWidget {
 }
 
 class _ConversionPageState extends State<ConversionPage> {
-  // === VARIABEL KONVERSI WAKTU ===
+  // === VARIABEL WAKTU ===
   late Timer _timer;
   DateTime _nowUtc = DateTime.now().toUtc();
 
-  // === VARIABEL KONVERSI MATA UANG ===
-  final TextEditingController _currencyController = TextEditingController();
-  double _idrValue = 0.0;
+  // Daftar lengkap zona waktu yang bisa dipilih
+  final List<Map<String, dynamic>> _availableTimeZones = [
+    {'name': 'London (GMT)', 'offset': 0},
+    {'name': 'Jakarta (WIB)', 'offset': 7},
+    {'name': 'Makassar (WITA)', 'offset': 8},
+    {'name': 'Jayapura (WIT)', 'offset': 9},
+    {'name': 'New York (EST)', 'offset': -5},
+    {'name': 'Tokyo (JST)', 'offset': 9},
+    {'name': 'Sydney (AEST)', 'offset': 10},
+    {'name': 'Dubai (GST)', 'offset': 4},
+  ];
 
-  // Asumsi nilai tukar (bisa diganti dengan API jika diperlukan nanti)
-  final double _usdRate = 16200.0; // 1 USD ke IDR
-  final double _eurRate = 17500.0; // 1 EUR ke IDR
-  final double _gbpRate = 20500.0; // 1 GBP ke IDR
+  late List<Map<String, dynamic>> _selectedTimeZones;
+
+  // === VARIABEL MATA UANG ===
+  final TextEditingController _currencyController = TextEditingController();
+  double _inputAmount = 0.0;
+  String _baseCurrency = 'IDR';
+
+  List<String> _targetCurrencies = ['USD', 'EUR', 'GBP'];
+
+  final Map<String, double> _exchangeRates = {
+    'IDR': 1.0,
+    'USD': 16200.0,
+    'EUR': 17500.0,
+    'GBP': 20500.0,
+    'JPY': 105.0,
+    'CNY': 2230.0,
+    'SGD': 11900.0,
+    'AUD': 10500.0,
+    'CAD': 11800.0,
+    'CHF': 17800.0,
+  };
+
+  final Map<String, String> _currencySymbols = {
+    'IDR': 'Rp', 'USD': '\$', 'EUR': '€', 'GBP': '£',
+    'JPY': '¥', 'CNY': '¥', 'SGD': 'S\$', 'AUD': 'A\$',
+    'CAD': 'C\$', 'CHF': 'Fr',
+  };
 
   @override
   void initState() {
     super.initState();
-    // Memperbarui waktu setiap 1 detik
+    _selectedTimeZones = [
+      _availableTimeZones[0],
+      _availableTimeZones[1],
+      _availableTimeZones[2],
+      _availableTimeZones[3],
+    ];
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -38,12 +75,11 @@ class _ConversionPageState extends State<ConversionPage> {
 
   @override
   void dispose() {
-    _timer.cancel(); // Mencegah memory leak
+    _timer.cancel();
     _currencyController.dispose();
     super.dispose();
   }
 
-  // Helper untuk memformat jam agar selalu 2 digit (contoh: 09:05:01)
   String _formatTime(DateTime time) {
     String h = time.hour.toString().padLeft(2, '0');
     String m = time.minute.toString().padLeft(2, '0');
@@ -51,142 +87,330 @@ class _ConversionPageState extends State<ConversionPage> {
     return "$h:$m:$s";
   }
 
+  double _convertCurrency(String targetCurrency) {
+    if (_inputAmount == 0.0) return 0.0;
+    double valueInIdr = _inputAmount * _exchangeRates[_baseCurrency]!;
+    return valueInIdr / _exchangeRates[targetCurrency]!;
+  }
+
+  // --- FUNGSI BARU: Pemisah Ribuan (Thousand Separator) ---
+  // Berfungsi untuk mengubah angka panjang menjadi mudah dibaca (contoh: 1,000,000.00)
+  String _formatCurrency(double value) {
+    if (value == 0) return '0.00';
+    String stringValue = value.toStringAsFixed(2);
+    List<String> parts = stringValue.split('.');
+    RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String mathFunc(Match match) => '${match[1]},';
+    parts[0] = parts[0].replaceAllMapped(reg, mathFunc);
+    return parts.join('.');
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Menghitung zona waktu sesuai kriteria tugas
-    DateTime timeLondon = _nowUtc.add(const Duration(hours: 0)); // GMT/UTC+0
-    DateTime timeWIB = _nowUtc.add(const Duration(hours: 7));    // UTC+7
-    DateTime timeWITA = _nowUtc.add(const Duration(hours: 8));   // UTC+8
-    DateTime timeWIT = _nowUtc.add(const Duration(hours: 9));    // UTC+9
-
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            const Row(
+            // --- HEADER ---
+            Row(
               children: [
-                Icon(Icons.public, size: 36, color: AppColors.primary),
-                SizedBox(width: 12),
-                Expanded(
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.public, size: 32, color: AppColors.primary),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Pemasok Internasional',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                       ),
                       Text(
-                        'Konversi Waktu & Estimasi Biaya Impor',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        'Pantau jam & estimasi biaya impor',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // --- BAGIAN 1: KONVERSI WAKTU ---
-            const Text(
-              '🕒 Jam Operasional Gudang & Pemasok',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 2.5,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              children: [
-                _buildTimeCard('London (GMT)', _formatTime(timeLondon), Colors.blueGrey),
-                _buildTimeCard('Jakarta (WIB)', _formatTime(timeWIB), Colors.green),
-                _buildTimeCard('Makassar (WITA)', _formatTime(timeWITA), Colors.teal),
-                _buildTimeCard('Jayapura (WIT)', _formatTime(timeWIT), Colors.orange),
-              ],
-            ),
-
             const SizedBox(height: 32),
 
-            // --- BAGIAN 2: KONVERSI MATA UANG ---
-            const Text(
-              '💱 Kalkulator Estimasi Biaya Impor',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _currencyController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Masukkan Nominal Rupiah (IDR)',
-                        prefixIcon: const Icon(Icons.payments_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _idrValue = double.tryParse(value) ?? 0.0;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    _buildCurrencyResult('Dolar Amerika (USD)', _idrValue / _usdRate, '\$'),
-                    _buildCurrencyResult('Euro (EUR)', _idrValue / _eurRate, '€'),
-                    _buildCurrencyResult('Pound Britania (GBP)', _idrValue / _gbpRate, '£'),
-                  ],
+            // --- BAGIAN 1: KONVERSI WAKTU ---
+            Row(
+              children: [
+                const Icon(Icons.access_time_filled, color: Colors.blueGrey, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Jam Operasional Global',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.blueGrey.shade800),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisExtent: 105, 
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+              ),
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                DateTime localTime = _nowUtc.add(Duration(hours: _selectedTimeZones[index]['offset']));
+                return _buildModernTimeCard(index, _formatTime(localTime));
+              },
+            ),
+
+            const SizedBox(height: 40),
+
+            // --- BAGIAN 2: KONVERSI MATA UANG ---
+            Row(
+              children: [
+                const Icon(Icons.currency_exchange, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Kalkulator Biaya Impor',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.blueGrey.shade800),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  // AREA INPUT (Base Currency)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _baseCurrency,
+                              icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
+                              items: _exchangeRates.keys.map((String cur) {
+                                return DropdownMenuItem<String>(
+                                  value: cur,
+                                  child: Text(cur),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) setState(() => _baseCurrency = val);
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: _currencyController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                            decoration: InputDecoration(
+                              hintText: '0',
+                              border: InputBorder.none,
+                              prefixText: '${_currencySymbols[_baseCurrency]} ',
+                              prefixStyle: const TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w600),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                // Menghilangkan koma jika pengguna mengetik format manual
+                                String cleanValue = value.replaceAll(',', '');
+                                _inputAmount = double.tryParse(cleanValue) ?? 0.0;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Icon(Icons.swap_vert_circle, color: Colors.grey, size: 28),
+                  ),
+                  
+                  // AREA HASIL (3 Target Currencies)
+                  ...List.generate(3, (index) {
+                    return _buildModernResultRow(index);
+                  }),
+                ],
               ),
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
 
-  // Widget pembantu untuk UI Jam
-  Widget _buildTimeCard(String location, String timeStr, Color color) {
+  // --- WIDGET PEMBANTU: KARTU WAKTU MODERN ---
+  Widget _buildModernTimeCard(int index, String timeStr) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(location, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(timeStr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          Container(
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Map<String, dynamic>>(
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 16),
+                value: _selectedTimeZones[index],
+                items: _availableTimeZones.map((tz) {
+                  return DropdownMenuItem<Map<String, dynamic>>(
+                    value: tz,
+                    child: Text(
+                      tz['name'],
+                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (newTz) {
+                  if (newTz != null) {
+                    setState(() => _selectedTimeZones[index] = newTz);
+                  }
+                },
+              ),
+            ),
+          ),
+          
+          Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox( // PENCEGAH OVERFLOW PADA JAM (Jaga-jaga)
+              fit: BoxFit.scaleDown,
+              child: Text(
+                timeStr,
+                style: const TextStyle(
+                  fontSize: 22, 
+                  fontWeight: FontWeight.w800, 
+                  letterSpacing: 1.0,
+                  color: Colors.black87
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // Widget pembantu untuk UI Hasil Konversi Uang
-  Widget _buildCurrencyResult(String currencyName, double convertedValue, String symbol) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  // --- WIDGET PEMBANTU: BARIS HASIL MATA UANG MODERN ---
+  Widget _buildModernResultRow(int index) {
+    String targetCur = _targetCurrencies[index];
+    double result = _convertCurrency(targetCur);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(currencyName, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(
-            '$symbol ${convertedValue.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+          Container(
+            height: 36,
+            width: 85,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87, fontSize: 14),
+                value: targetCur,
+                items: _exchangeRates.keys.map((String cur) {
+                  return DropdownMenuItem<String>(
+                    value: cur,
+                    child: Text(cur),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _targetCurrencies[index] = val);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // PERBAIKAN: Menggunakan FittedBox untuk mengecilkan angka panjang secara otomatis
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_currencySymbols[targetCur]} ${_formatCurrency(result)}',
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.w800, 
+                  color: AppColors.primary
+                ),
+              ),
+            ),
           ),
         ],
       ),

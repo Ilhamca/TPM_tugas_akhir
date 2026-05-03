@@ -11,9 +11,9 @@ Projek dibuat menggunakan kriteria:
 
 - [X] Terkoneksi database / penyimpanan (SQLite, Hive, dll)
 - [ ] Terdapat web service / API boleh sampai pemanfaatan IoT, games atau multiplatform (Android, iOS) serta memiliki fasilitas LBS yang terkait tema
-- [ ] Terdapat menu buttom navigation: menu profil (ada gambar) dan menu saran dan kesan mata kuliah TPM dan menu logout
-- [ ] Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep
-- [ ] Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope, dll) sesuai konsep
+- [X] Terdapat menu buttom navigation: menu profil (ada gambar) dan menu saran dan kesan mata kuliah TPM dan menu logout
+- [X] Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep
+- [X] Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope, dll) sesuai konsep
 - [ ] Memiliki fitur/fasilitas AI/ML dan LLM sesuai dengan konsep tema
 - [ ] Memiliki fitur mini games sederhana terkait dengan konsep
 - [ ] Memiliki fasilitas pencarian dan pemilihan serta notifikasi sesuai dengan konsep

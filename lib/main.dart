@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tugas_akhir/constants/string_constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tugas_akhir/services/notification_services.dart';
+import 'package:flutter/services.dart';
 
 class HiveDatabaseHelper {
   static const secureStorage = FlutterSecureStorage();
@@ -48,7 +49,6 @@ class HiveDatabaseHelper {
   static Future<void> initNotifications() async {
     await NotificationService().init();
   }
-
 }
 
 Future<void> main() async {
@@ -69,7 +69,13 @@ Future<void> main() async {
   // Initialize notifications
   await HiveDatabaseHelper.initNotifications();
 
-  runApp(const MyApp());
+  // Mengunci orientasi aplikasi hanya pada posisi Portrait (Tegak)
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {

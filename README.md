@@ -15,8 +15,8 @@ Projek dibuat menggunakan kriteria:
 - [X] Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep
 - [X] Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope, dll) sesuai konsep
 - [ ] Memiliki fitur/fasilitas AI/ML dan LLM sesuai dengan konsep tema
-- [ ] Memiliki fitur mini games sederhana terkait dengan konsep
-- [ ] Memiliki fasilitas pencarian dan pemilihan serta notifikasi sesuai dengan konsep
+- [X] Memiliki fitur mini games sederhana terkait dengan konsep
+- [X] Memiliki fasilitas pencarian dan pemilihan serta notifikasi sesuai dengan konsep
 
 ### Projek dipresentasikan di seluruh jadwal perkuliahan setelah UTS
 

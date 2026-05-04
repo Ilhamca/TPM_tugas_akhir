@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
 import 'package:tugas_akhir/controller/controller.dart';
+import 'package:tugas_akhir/screen/mini_game_page.dart'; // Import Mini Game
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -38,7 +39,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BARU: Form Saran TPM ---
+  // --- WIDGET FORM SARAN TPM ---
   Widget _buildSaranTPMSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +73,6 @@ class ProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             onPressed: () {
-              // Menutup keyboard saat tombol ditekan
               FocusScope.of(context).unfocus();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -119,14 +119,14 @@ class ProfilePage extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 24),
 
-            // --- 2. BAGIAN SARAN TPM (Dipindah ke sini) ---
+            // --- 2. BAGIAN SARAN TPM ---
             _buildSaranTPMSection(context),
 
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 24),
 
-            // --- 3. BAGIAN PENGATURAN & DEBUG ---
+            // --- 3. BAGIAN PENGATURAN & MINI GAME ---
             Align(
               alignment: Alignment.centerLeft,
               child: Column(
@@ -137,14 +137,35 @@ class ProfilePage extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Kelola sesi dan database aplikasi Anda',
+                  const Text(
+                    'Kelola sesi, database, dan fitur tambahan',
                     style: TextStyle(fontSize: 14, color: Colors.blueGrey),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
+
+            // TOMBOL BARU: Mini Game Sortir Gudang
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: const Icon(Icons.videogame_asset),
+                label: const Text('Mainkan Mini Game (Sortir Gudang)'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MiniGamePage()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Tombol Debug (Hapus Data)
             SizedBox(

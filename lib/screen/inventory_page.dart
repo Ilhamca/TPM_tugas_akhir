@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:tugas_akhir/services/notification_services.dart';
 import 'package:tugas_akhir/theme/app_color.dart';
 
@@ -14,12 +16,14 @@ class InventoryPage extends StatefulWidget {
 class _InventoryPageState extends State<InventoryPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  final Set<dynamic> _selectedKeys = {}; // Menyimpan ID barang yang dicentang
+  final Set<dynamic> _selectedKeys = {}; 
+  bool _isLoading = false; // Untuk indikator loading API
 
   @override
   void initState() {
     super.initState();
-    _initDummyData();
+    // Langsung tarik data dari MySQL saat halaman dibuka
+    _fetchDataFromAPI();
   }
 
   @override
@@ -28,54 +32,74 @@ class _InventoryPageState extends State<InventoryPage> {
     super.dispose();
   }
 
-  // Membuat data awal jika database gudang masih kosong
-  Future<void> _initDummyData() async {
-    var box = Hive.box('inventoryBox');
-    if (box.isEmpty) {
-      await box.put('item_1', {'name': 'Kardus Besar', 'stock': 15});
-      await box.put('item_2', {'name': 'Lakban Coklat', 'stock': 8});
-      await box.put('item_3', {'name': 'Plastik Bubble Wrap', 'stock': 6});
-      await box.put('item_4', {'name': 'Gunting Baja', 'stock': 20});
+  // FUNGSI BARU: Mengambil data dari API XAMPP
+  Future<void> _fetchDataFromAPI() async {
+    setState(() => _isLoading = true);
+    try {
+      // Menggunakan IP Wi-Fi laptopmu
+      final url = Uri.parse('http://192.168.18.106/gudang_pintar/api/get_paket.php');
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        
+        if (jsonResponse['status'] == 'success') {
+          var box = Hive.box('inventoryBox');
+          await box.clear(); // Bersihkan data lama agar sinkron dengan database
+
+          List dataPaket = jsonResponse['data'];
+          for (var item in dataPaket) {
+            // Memasukkan data dari MySQL ke Hive
+            await box.put(item['no_resi'], {
+              'name': item['deskripsi_barang'] ?? 'Tanpa Nama',
+              'stock': 1, // Default stok 1 per resi
+              'no_resi': item['no_resi'],
+              'penerima': item['nama_penerima'],
+              'status_paket': item['status'], // Mengambil status dari Enum MySQL
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error Sinkronisasi: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   // Logika Menambah Stok
   void _increaseStock(dynamic key, Map data) {
     var box = Hive.box('inventoryBox');
-    box.put(key, {'name': data['name'], 'stock': data['stock'] + 1});
+    box.put(key, {
+      ...data, // Simpan data lainnya (resi, penerima, dll)
+      'stock': data['stock'] + 1
+    });
   }
 
-  // Logika Mengurangi Stok & Memicu Notifikasi
+  // Logika Mengurangi Stok & Notifikasi[cite: 3]
   void _decreaseStock(dynamic key, Map data) {
     if (data['stock'] > 0) {
       var box = Hive.box('inventoryBox');
       int newStock = data['stock'] - 1;
       
-      box.put(key, {'name': data['name'], 'stock': newStock});
+      box.put(key, {
+        ...data,
+        'stock': newStock
+      });
 
-      // FITUR NOTIFIKASI: Memicu peringatan jika stok kritis (< 5)
       if (newStock < 5) {
         NotificationService().showInstantNotification(
           title: '⚠️ Peringatan Stok Tipis!',
-          body: 'Stok barang "${data['name']}" hanya tersisa $newStock.',
+          body: 'Stok "${data['name']}" sisa $newStock.',
         );
       }
     }
   }
 
-  // Logika Pemilihan (Selection) untuk menghapus barang
   void _deleteSelectedItems() {
     var box = Hive.box('inventoryBox');
     box.deleteAll(_selectedKeys);
-    setState(() {
-      _selectedKeys.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Barang terpilih berhasil dihapus'),
-        backgroundColor: Colors.red,
-      ),
-    );
+    setState(() => _selectedKeys.clear());
   }
 
   @override
@@ -83,7 +107,7 @@ class _InventoryPageState extends State<InventoryPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Header
+          // Header dengan Username[cite: 3]
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -98,73 +122,56 @@ class _InventoryPageState extends State<InventoryPage> {
                         'Inventaris Gudang',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      Text(
-                        'Admin: ${widget.username}',
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
+                      Text('Admin: ${widget.username}', 
+                        style: const TextStyle(color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
-                // Tombol Hapus (Muncul jika ada barang yang dipilih)
+                // Tombol Refresh API
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: AppColors.primary),
+                  onPressed: _fetchDataFromAPI,
+                ),
                 if (_selectedKeys.isNotEmpty)
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: _deleteSelectedItems,
-                    tooltip: 'Hapus barang terpilih',
                   ),
               ],
             ),
           ),
 
-          // FITUR PENCARIAN (Search Bar)
+          // Search Bar[cite: 3]
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari nama barang...',
+                hintText: 'Cari resi atau nama barang...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                    : null,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
-          const SizedBox(height: 12),
+          
+          if (_isLoading) const LinearProgressIndicator(),
 
-          // Daftar Barang dengan Hive ValueListenableBuilder
+          // Daftar Barang dari Hive ValueListenableBuilder[cite: 3]
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: Hive.box('inventoryBox').listenable(),
               builder: (context, Box box, _) {
-                if (box.isEmpty) {
-                  return const Center(child: Text('Gudang kosong.'));
+                if (box.isEmpty && !_isLoading) {
+                  return const Center(child: Text('Gudang kosong (Database MySQL kosong).'));
                 }
 
-                // Filter data berdasarkan pencarian
+                // Filter Pencarian
                 var filteredEntries = box.toMap().entries.where((entry) {
                   var itemData = entry.value as Map;
-                  var itemName = itemData['name'].toString().toLowerCase();
-                  return itemName.contains(_searchQuery.toLowerCase());
+                  var searchBase = "${itemData['name']} ${itemData['no_resi']}".toLowerCase();
+                  return searchBase.contains(_searchQuery.toLowerCase());
                 }).toList();
-
-                if (filteredEntries.isEmpty) {
-                  return const Center(child: Text('Barang tidak ditemukan.'));
-                }
 
                 return ListView.builder(
                   itemCount: filteredEntries.length,
@@ -176,29 +183,24 @@ class _InventoryPageState extends State<InventoryPage> {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       child: ListTile(
-                        // FITUR PEMILIHAN (Checkbox)
                         leading: Checkbox(
                           value: isSelected,
                           onChanged: (bool? value) {
                             setState(() {
-                              if (value == true) {
-                                _selectedKeys.add(key);
-                              } else {
-                                _selectedKeys.remove(key);
-                              }
+                              value == true ? _selectedKeys.add(key) : _selectedKeys.remove(key);
                             });
                           },
                         ),
-                        title: Text(
-                          data['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          'Sisa Stok: ${data['stock']}',
-                          style: TextStyle(
-                            color: data['stock'] < 5 ? Colors.red : Colors.green,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        title: Text(data['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Resi: ${data['no_resi'] ?? '-'}'),
+                            Text('Status: ${data['status_paket']}', 
+                                 style: TextStyle(color: _getStatusColor(data['status_paket']), fontWeight: FontWeight.bold)),
+                            Text('Stok: ${data['stock']}', 
+                                 style: TextStyle(color: data['stock'] < 5 ? Colors.red : Colors.green)),
+                          ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -223,5 +225,11 @@ class _InventoryPageState extends State<InventoryPage> {
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(String? status) {
+    if (status == 'Selesai') return Colors.green;
+    if (status == 'Sedang Diantar') return Colors.orange;
+    return Colors.blue;
   }
 }

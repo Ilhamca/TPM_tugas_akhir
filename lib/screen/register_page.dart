@@ -4,7 +4,7 @@ import 'package:tugas_akhir/theme/app_color.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
 import 'package:hive/hive.dart';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,7 +15,6 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -26,70 +25,45 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _register() {
+  Future<void> _register() async {
     final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
-    final email = _emailController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    var box = Hive.box('gudangPintarSecureBox');
-
-    var bytes = utf8.encode(password);
-    var hashedPassword = sha256.convert(bytes).toString();
-
-    // Check if username already exists
-    final usernameSudahDipakai = box.values.any(
-      (u) => (u['username'] as String).toLowerCase() == username.toLowerCase(),
-    );
-
-    if (usernameSudahDipakai) {
-      ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Username sudah digunakan, pilih username lain'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    // Save user data to Hive
     try {
-      box.put(username, {
-        'email': email,
-        'username': username,
-        'password': hashedPassword,
-      });
+      final res = await http.post(
+        Uri.parse('http://192.168.18.106/gudang_pintar/api/register.php'),
+        body: {'username': username, 'password': password, 'role': 'kurir'},
+      );
+      final data = jsonDecode(res.body);
 
-      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      if (!mounted) return;
+      if (data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registrasi berhasil! Silakan login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message']), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Pendaftaran berhasil. Silakan login.'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
+          content: Text('Gagal terhubung ke server.'),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -155,41 +129,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            TextFormField(
-                              controller: _emailController,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(
-                                  Icons.badge_outlined,
-                                  color: AppColors.primary,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.border,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Email tidak boleh kosong';
-                                } else if (!RegExp(
-                                  r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
-                                ).hasMatch(value.trim())) {
-                                  return 'Format email tidak valid';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
                             TextFormField(
                               controller: _usernameController,
                               textInputAction: TextInputAction.next,

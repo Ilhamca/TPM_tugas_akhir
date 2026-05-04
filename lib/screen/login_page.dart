@@ -83,12 +83,14 @@ class _LoginPageState extends State<LoginPage> {
         await box.put(username, {
           'username': data['data']['username'],
           'role': data['data']['role'],
+          'id': data['data']['id'],
         });
 
         await _rememberLastLoginUsername(username);
         
         if (!mounted) return;
-        _goToMenuPage(username);
+        final userId = data['data']['id'] as int;
+        _goToMenuPage(username, userId);
       } else {
         setState(() => _isLoginFailed = true);
         _showErrorSnackBar(data['message']);
@@ -117,7 +119,10 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (authenticated && mounted) {
-        _goToMenuPage(_storedUsername!);
+        var box = Hive.box('gudangPintarSecureBox');
+        final userData = box.get(_storedUsername!);
+        final userId = (userData?['id'] ?? 0) as int;
+        _goToMenuPage(_storedUsername!, userId);
       }
     } catch (e) {
       _showErrorSnackBar('Gagal verifikasi biometrik: $e');
@@ -130,12 +135,13 @@ class _LoginPageState extends State<LoginPage> {
     await _secureStorage.write(key: _lastLoginUsernameKey, value: username);
   }
 
-  void _goToMenuPage(String username) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MenuPage(username: username)),
-    );
-  }
+  // Ganti fungsi _goToMenuPage
+void _goToMenuPage(String username, int userId) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => MenuPage(username: username, userId: userId)),
+  );
+}
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

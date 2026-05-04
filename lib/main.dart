@@ -65,6 +65,7 @@ Future<void> main() async {
 
   // Database barang
   await Hive.openBox('inventoryBox');
+  await Hive.openBox('paketBox');
 
   // Initialize notifications
   await HiveDatabaseHelper.initNotifications();

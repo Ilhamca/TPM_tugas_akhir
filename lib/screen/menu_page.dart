@@ -31,36 +31,23 @@ class _MenuPageState extends State<MenuPage> {
     });
   }
 
-  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = [
-      PaketSayaPage(userId: widget.userId, onMulaiAntar: _onPaketMulaiAntar),
-      NavigasiPage(targetLat: _targetLat, targetLng: _targetLng, targetAlamat: _targetAlamat, activePaketId: _activePaketId),
-      const ConversionPage(),
-      const AiHelperPage(),
-      const ProfilePage(),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
-        selectedItemColor: Colors.orange.shade700,
-        unselectedItemColor: Colors.grey.shade600,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Paket Saya'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Navigasi'),
-          BottomNavigationBarItem(icon: Icon(Icons.public), label: 'Konversi'),
-          BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'AI Helper'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          PaketSayaPage(userId: widget.userId, onMulaiAntar: _onPaketMulaiAntar),
+          NavigasiPage(targetLat: _targetLat, targetLng: _targetLng, targetAlamat: _targetAlamat, activePaketId: _activePaketId),
+          const ConversionPage(),
+          const AiHelperPage(),
+          const ProfilePage(),
         ],
       ),
     );

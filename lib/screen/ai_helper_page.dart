@@ -16,9 +16,6 @@ class _AiHelperPageState extends State<AiHelperPage> {
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  // Ganti dengan API key Claude kamu
-  static const _apiKey = 'AIzaSyCJWC5pSdCrUh3q_zY4wJP49a41cu_pz0E';
-
   final List<String> _quickQuestions = [
     'Cuaca di Yogyakarta hari ini?',
     'Tips mengantar paket saat hujan?',
@@ -43,9 +40,7 @@ class _AiHelperPageState extends State<AiHelperPage> {
     _scrollToBottom();
 
     try {
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_apiKey'
-      );
+      final url = Uri.parse('http://192.168.18.106/gudang_pintar/api/gemini_proxy.php');
 
       final contents = _messages.map((m) => {
         'role': m['role'] == 'assistant' ? 'model' : 'user',
@@ -56,9 +51,6 @@ class _AiHelperPageState extends State<AiHelperPage> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'system_instruction': {
-            'parts': [{'text': 'Kamu adalah asisten kurir pengiriman paket bernama "Pintar". Jawab singkat, praktis, dalam Bahasa Indonesia. Fokus pada hal-hal berguna untuk kurir: cuaca, rute, estimasi waktu, penanganan paket.'}]
-          },
           'contents': contents,
         }),
       );

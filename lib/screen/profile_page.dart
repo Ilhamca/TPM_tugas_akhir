@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tugas_akhir/screen/login_page.dart';
 import 'package:tugas_akhir/controller/controller.dart';
-import 'package:tugas_akhir/screen/mini_game_page.dart'; // Import Mini Game
+import 'package:tugas_akhir/screen/mini_game_page.dart';
+import 'package:tugas_akhir/screen/sensor_page.dart';
+
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -151,18 +153,13 @@ class ProfilePage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal.shade600,
+                  backgroundColor: Colors.orange.shade400,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                icon: const Icon(Icons.videogame_asset),
-                label: const Text('Mainkan Mini Game (Sortir Gudang)'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MiniGamePage()),
-                  );
-                },
+                icon: const Icon(Icons.sensors),
+                label: const Text('Uji Sensor Paket (Accelerometer/Gyro)'),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SensorPage())),
               ),
             ),
             const SizedBox(height: 12),
